@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mangalore Zonal Regulations</title>
+    
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Load React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Load Babel Compiler (Translates JSX in the browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- The React app will inject itself here -->
+    <div id="root"></div>
+
+    <!-- The actual React Code -->
+    <script type="text/babel">
+        const { useState } = React;
+
+        // --- DATA EXTRACTED FROM PDF & REGS ---
+
+        const categoriesData = [
+        {
+            id: 'residential',
+            title: 'Residential',
+            icon: <i className="fas fa-home text-2xl"></i>,
+            color: 'bg-green-100 text-green-700 border-green-200',
+            description: 'Zones meant for human habitation and related activities.',
+            subcategories: [
+            { name: 'R1 - Basic', items: ['Plotted residential developments', 'Villas, Row Housing, semi-detached houses'] },
+            { name: 'R2 - Dense', items: ['Apartments', 'Hostels', 'Paying Guest accommodation', 'Multi Dwelling Housing', 'Service Apartments'] },
+            { name: 'R3 - Special', items: ['Group Housing (Development Plans)', 'Orphanages and Old age homes'] }
+            ]
+        },
+        {
+            id: 'commercial',
+            title: 'Commercial',
+            icon: <i className="fas fa-briefcase text-2xl"></i>,
+            color: 'bg-blue-100 text-blue-700 border-blue-200',
+            description: 'Zones for business, retail, offices, and trading.',
+            subcategories: [
+            { name: 'C1 - Local Shops', items: ['Petty shops, milk booths, ATMs', 'Hair dressing, tailoring, bakery', 'Offices/clinics of Advocates & Doctors'] },
+            { name: 'C2 - Retail/Eateries', items: ['Eateries (darshinis, tea stalls)', 'Retail shops, hardware, grocery', 'Gyms, cyber cafes, small repair centers'] },
+            { name: 'C3 - Major Commercial', items: ['Restaurants, Hotels, Recreational Clubs', 'Banks, Corporate offices, Nursing homes', 'Departmental stores'] },
+            { name: 'C4 - High Density', items: ['Fuel stations, Kalyana mantaps', 'Shopping complexes, Malls, Multiplexes', 'Specialty hospitals, Convention centers'] },
+            { name: 'C5 - Wholesale', items: ['Warehouses, Storage areas', 'Wholesale trading, Heavy goods markets', 'Sale of second hand junk goods'] }
+            ]
+        },
+        {
+            id: 'industrial',
+            title: 'Industrial',
+            icon: <i className="fas fa-industry text-2xl"></i>,
+            color: 'bg-purple-100 text-purple-700 border-purple-200',
+            description: 'Zones for manufacturing, processing, and tech parks.',
+            subcategories: [
+            { name: 'I-1 - Household', items: ['Tiny and household industries (Bakeries, tailoring, printing, electronics repair)', 'Power consumption < 5KW'] },
+            { name: 'I-2 - Service', items: ['R&D labs, Test centers', 'IT, BT, BPO activities'] },
+            { name: 'I-3 - Light', items: ['Light manufacturing industries (subject to environmental clearance)'] },
+            { name: 'I-4 - Medium', items: ['Medium industries, Gas godowns', 'Warehousing with loading platforms'] },
+            { name: 'I-5 - Heavy', items: ['Heavy manufacturing industries', 'Hazardous industries'] }
+            ]
+        },
+        {
+            id: 'institutional',
+            title: 'Institutional',
+            icon: <i className="fas fa-building text-2xl"></i>,
+            color: 'bg-orange-100 text-orange-700 border-orange-200',
+            description: 'Government complexes, healthcare, and civic infrastructure (P&SP Zones).',
+            subcategories: [
+            { name: 'P&SP1 - Basic Utilities', items: ['Sub offices of utilities', 'Nursery Creches, Toilets', 'Places of worship'] },
+            { name: 'P&SP2 - Civic Services', items: ['Police Stations, Post offices', 'Govt. dispensaries, Orphanages', 'Traffic and Transport facilities'] },
+            { name: 'P&SP3 - Major Institutions', items: ['Research institutions', 'Government buildings', 'Fire stations, Broadcasting stations'] }
+            ]
+        },
+        {
+            id: 'educational',
+            title: 'Educational',
+            icon: <i className="fas fa-graduation-cap text-2xl"></i>,
+            color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+            description: 'Schools, colleges, and research facilities (falls under P&SP).',
+            subcategories: [
+            { name: 'Primary/Coaching', items: ['Education Coaching centers (Allowed in C2)', 'Primary Schools (P&SP2)'] },
+            { name: 'High Schools', items: ['Middle schools, High schools (P&SP3)', 'Integrated Residential schools (P&SP3)'] },
+            { name: 'Higher Education', items: ['Higher Educational Institutions, Colleges (P&SP3)', 'Hostels (P&SP2)'] }
+            ]
+        },
+        {
+            id: 'assembly',
+            title: 'Assembly',
+            icon: <i className="fas fa-users text-2xl"></i>,
+            color: 'bg-teal-100 text-teal-700 border-teal-200',
+            description: 'Places of public gathering, entertainment, and events.',
+            subcategories: [
+            { name: 'Community/Cultural', items: ['Community halls (Min plot 1000 sqm)', 'Auditoriums, cultural complexes (P&SP3)', 'Public libraries'] },
+            { name: 'Entertainment', items: ['Cinema and multiplexes (C4)', 'Entertainment and amusement centers (C4)', 'Exhibitions centers (C4)'] },
+            { name: 'Events/Social', items: ['Kalyana mantaps (C4 - Min plot 1000/2000 sqm)', 'Convention centers and banquet halls (C4)', 'Social Clubs'] }
+            ]
+        },
+        {
+            id: 'transport',
+            title: 'Transportation (T)',
+            icon: <i className="fas fa-bus text-2xl"></i>,
+            color: 'bg-gray-100 text-gray-700 border-gray-200',
+            description: 'Zones for transit infrastructure, parking, and communication.',
+            subcategories: [
+            { name: 'T1 & T2 - Local Transit', items: ['Bus stands, Auto stands', 'Multi-level parking, Post offices'] },
+            { name: 'T3 & T4 - Major Transit', items: ['Railway stations, Airports', 'Transport depots, Telecom centers'] }
+            ]
+        }
+        ];
+
+        const setbackData = [
+        { height: 'Less than 7m (plot < 250 sqm)', front: 1.0, sides: 1.5, covRes: 75, covNonRes: 80 },
+        { height: 'Less than 7m (plot > 250 sqm)', front: 1.0, sides: 2.0, covRes: 80, covNonRes: 75 },
+        { height: '7m up to 9.99m', front: 2.0, sides: 1.5, covRes: 80, covNonRes: 75 },
+        { height: '10m up to 11.99m', front: 3.0, sides: 2.5, covRes: 75, covNonRes: 70 },
+        { height: '12m up to 14.99m', front: 4.0, sides: 3.0, covRes: 75, covNonRes: 70 },
+        { height: '15m up to 17.99m', front: 5.0, sides: 5.0, covRes: 70, covNonRes: 65 },
+        { height: '18m up to 20.99m', front: 5.0, sides: 6.0, covRes: 65, covNonRes: 70 },
+        { height: '21m up to 23.99m', front: 6.0, sides: 7.0, covRes: 60, covNonRes: 65 },
+        { height: '24m up to 26.99m', front: 6.0, sides: 8.0, covRes: 60, covNonRes: 65 },
+        { height: '27m up to 29.99m', front: 9.0, sides: 7.0, covRes: 60, covNonRes: 55 },
+        { height: '30m up to 34.99m', front: 10.0, sides: 7.0, covRes: 60, covNonRes: 55 }
+        ];
+
+        const parkingData = [
+        { use: 'Residential (Multi-dwelling)', rule: '1 car per tenement exceeding 75 to 175 sqm floor area. 2 cars for >175 sqm.', factor: 125 },
+        { use: 'Hotels / Lodging', rule: '1 car per 4 rooms or 50 sqm of floor area, whichever is more.', factor: 50 },
+        { use: 'Educational', rule: '1 car per 150 sqm floor area.', factor: 150 },
+        { use: 'Hospital', rule: '1 car per 100 sqm floor area.', factor: 100 },
+        { use: 'Nursing Homes', rule: '1 car per 75 sqm floor area.', factor: 75 },
+        { use: 'Assembly / Auditorium', rule: '1 car per 15 seats OR 50 sqm of floor area.', factor: 50 },
+        { use: 'Commercial / Office / IT', rule: '1 car per 50 sqm of floor area.', factor: 50 },
+        { use: 'Industrial / Storage', rule: '1 car per 100 sqm + 1 lorry parking.', factor: 100 },
+        { use: 'Kalyana Mantapa / Community Hall', rule: '1 car per 50 sqm floor area.', factor: 50 }
+        ];
+
+        const occupancyData = [
+        { use: 'Residential / Dwellings', factor: 12.5, wcRatio: 0, wcRule: '1 per dwelling unit' },
+        { use: 'Offices / IT Parks / Commercial', factor: 10, wcRatio: 25, wcRule: '1 WC per 25 persons (up to 100), 1 per 50 thereafter' },
+        { use: 'Retail / Shopping', factor: 3, wcRatio: 50, wcRule: '1 WC per 50 persons' },
+        { use: 'Assembly / Theatres', factor: 0.6, wcRatio: 75, wcRule: 'Average 1 WC per 75 persons (1:100 males, 1:50 females)' },
+        { use: 'Educational / Schools', factor: 4, wcRatio: 40, wcRule: '1 WC per 40 students' },
+        { use: 'Hospitals / Clinics', factor: 15, wcRatio: 100, wcRule: '1 WC per 4 beds (wards), 1 per 100 persons (OPD)' },
+        ];
+
+        const circulationData = [
+        { type: 'Residential (inside dwelling unit)', corridor: 'Nil', stairs: '1.0m', ramp: 'Nil' },
+        { type: 'Residential (common multi-dwelling)', corridor: '1.5m', stairs: '1.25m', ramp: 'Nil' },
+        { type: 'Assembly (Auditorium, Temple, Mosque)', corridor: '2.0m', stairs: '2.0m', ramp: '2.0m' },
+        { type: 'Govt. Office', corridor: '2.0m', stairs: '2.0m', ramp: '2.0m' },
+        { type: 'Govt. Hospital', corridor: '2.4m', stairs: '2.0m', ramp: '2.0m' },
+        { type: 'Educational (Schools, Colleges)', corridor: '2.0m', stairs: '2.0m', ramp: '2.0m' },
+        { type: 'Commercial (Shops, Clinics, Lodges)', corridor: '1.5m', stairs: '1.5m', ramp: '1.5m' },
+        { type: 'All other buildings', corridor: '1.5m', stairs: '1.5m', ramp: '1.5m' },
+        ];
+
+        const equivalenceTableData = [
+        { area: 'Up to 1000', roadMin: '<6m', roadReq: '6m', farPerm: 1.30, farPrem: 0.2, farTdr: 0.1, farTotal: 1.60, useRes: 'R', useCom: 'C1', useInd: 'I-1', usePsp: 'P&SP1', useTc: 'T1' },
+        { area: '1000-2000', roadMin: '6m', roadReq: '6m', farPerm: 1.40, farPrem: 0.4, farTdr: 0.2, farTotal: 2.00, useRes: 'R', useCom: 'C1', useInd: 'I-1', usePsp: 'P&SP1', useTc: 'T1' },
+        { area: '2000-3000', roadMin: '6m', roadReq: '9m', farPerm: 1.50, farPrem: 0.6, farTdr: 0.3, farTotal: 2.40, useRes: 'R', useCom: 'C2', useInd: 'I-1', usePsp: 'P&SP1', useTc: 'T1' },
+        { area: '3000-4000', roadMin: '9m', roadReq: '9m', farPerm: 1.60, farPrem: 0.8, farTdr: 0.4, farTotal: 2.80, useRes: 'R', useCom: 'C2', useInd: 'I-2', usePsp: 'P&SP2', useTc: 'T1' },
+        { area: 'Over 4000', roadMin: '9m', roadReq: '12m', farPerm: 1.90, farPrem: 1.0, farTdr: 0.5, farTotal: 3.40, useRes: 'R', useCom: 'C3', useInd: 'I-2', usePsp: 'P&SP2', useTc: 'T2' },
+        { area: 'Over 4000', roadMin: '12m', roadReq: '12m', farPerm: 2.10, farPrem: 1.0, farTdr: 0.5, farTotal: 3.60, useRes: 'R', useCom: 'C4', useInd: 'I-3', usePsp: 'P&SP3', useTc: 'T2' },
+        { area: 'Over 4000', roadMin: '12m', roadReq: '18m', farPerm: 2.30, farPrem: 1.0, farTdr: 0.5, farTotal: 3.80, useRes: 'R', useCom: 'C5', useInd: 'I-3', usePsp: 'P&SP4', useTc: 'T3' },
+        { area: 'Over 4000', roadMin: '12m', roadReq: '24m+', farPerm: 2.50, farPrem: 1.0, farTdr: 0.5, farTotal: 4.00, useRes: 'R', useCom: 'C5', useInd: 'I-5', usePsp: 'P&SP4', useTc: 'T4' },
+        ];
+
+        const parkingLayoutData = [
+          { angle: 'Parallel (0°)', baySize: '2.5m x 6.0m', aisleOneWay: '3.0m', aisleTwoWay: '6.0m' },
+          { angle: '30° Angled', baySize: '2.5m x 5.0m', aisleOneWay: '3.0m', aisleTwoWay: '6.0m' },
+          { angle: '45° Angled', baySize: '2.5m x 5.0m', aisleOneWay: '3.5m', aisleTwoWay: '6.0m' },
+          { angle: '60° Angled', baySize: '2.5m x 5.0m', aisleOneWay: '4.5m', aisleTwoWay: '6.0m' },
+          { angle: '90° Perpendicular', baySize: '2.5m x 5.0m', aisleOneWay: '6.0m', aisleTwoWay: '6.0m' }
+        ];
+
+        const turningRadiusData = [
+          { vehicle: 'Standard Car (LMV)', radius: '4.5m', description: 'Minimum inner turning radius for standard passenger vehicles.' },
+          { vehicle: 'Bus / Heavy Vehicle', radius: '9.0m', description: 'Required for commercial transport and large buses.' },
+          { vehicle: 'Fire Tender', radius: '9.0m - 12.0m', description: '9m inner and 12m outer turning radius mandatory for high-rise fire access.' }
+        ];
+
+        // --- COMPONENTS ---
+
+        const TabButton = ({ active, icon, label, onClick }) => (
+        <button
+            onClick={onClick}
+            className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors duration-200 border-b-2 ${
+            active 
+                ? 'border-indigo-600 text-indigo-600 bg-indigo-50' 
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            }`}
+        >
+            {icon}
+            <span>{label}</span>
+        </button>
+        );
+
+        const CategoryCard = ({ data }) => {
+        return (
+            <div className={`border rounded-xl p-6 ${data.color} bg-opacity-10 transition-shadow hover:shadow-md h-full flex flex-col`}>
+            <div className="flex items-center space-x-3 mb-4">
+                <div className={`p-3 rounded-lg bg-white bg-opacity-60 shadow-sm flex items-center justify-center`}>
+                {data.icon}
+                </div>
+                <h3 className="text-xl font-bold">{data.title}</h3>
+            </div>
+            <p className="text-sm opacity-80 mb-6 flex-grow">{data.description}</p>
+            
+            <div className="space-y-4">
+                {data.subcategories.map((sub, idx) => (
+                <div key={idx} className="bg-white bg-opacity-60 rounded-lg p-4 shadow-sm border border-white border-opacity-40">
+                    <h4 className="font-semibold mb-2">{sub.name}</h4>
+                    <ul className="space-y-1">
+                    {sub.items.map((item, i) => (
+                        <li key={i} className="flex items-start space-x-2 text-sm">
+                        <i className="fas fa-chevron-right text-sm mt-1 opacity-60 flex-shrink-0"></i>
+                        <span>{item}</span>
+                        </li>
+                    ))}
+                    </ul>
+                </div>
+                ))}
+            </div>
+            </div>
+        );
+        };
+
+        const CalculatorSection = () => {
+        const [plotArea, setPlotArea] = useState(2500);
+        const [roadWidth, setRoadWidth] = useState(9);
+
+        // Precise logic based on Table 1 Equivalence
+        let permissibleFAR = 1.3;
+        let premiumFAR = 0.2;
+        let tdrFAR = 0.1;
+        let maxFAR = 1.6;
+
+        if (roadWidth < 6) {
+            permissibleFAR = 1.0; premiumFAR = 0.0; tdrFAR = 0.0; maxFAR = 1.0; 
+        }
+        else if (plotArea <= 1000) { 
+            permissibleFAR = 1.3; premiumFAR = 0.2; tdrFAR = 0.1; maxFAR = 1.6; 
+        }
+        else if (plotArea <= 2000) { 
+            permissibleFAR = 1.4; premiumFAR = 0.4; tdrFAR = 0.2; maxFAR = 2.0; 
+        }
+        else if (plotArea <= 3000) { 
+            permissibleFAR = 1.5; premiumFAR = 0.6; tdrFAR = 0.3; maxFAR = 2.4; 
+        }
+        else if (plotArea <= 4000) { 
+            permissibleFAR = 1.6; premiumFAR = 0.8; tdrFAR = 0.4; maxFAR = 2.8; 
+        }
+        else { 
+            // Over 4000 sqm cases depend heavily on road width
+            if (roadWidth < 12) {
+            permissibleFAR = 1.9; premiumFAR = 1.0; tdrFAR = 0.5; maxFAR = 3.4;
+            } else if (roadWidth >= 12 && roadWidth < 18) {
+            permissibleFAR = 2.1; premiumFAR = 1.0; tdrFAR = 0.5; maxFAR = 3.6;
+            } else if (roadWidth >= 18 && roadWidth < 24) {
+            permissibleFAR = 2.3; premiumFAR = 1.0; tdrFAR = 0.5; maxFAR = 3.8;
+            } else {
+            permissibleFAR = 2.5; premiumFAR = 1.0; tdrFAR = 0.5; maxFAR = 4.0;
+            }
+        }
+
+        const baseBuiltUp = (plotArea * permissibleFAR).toLocaleString(undefined, { maximumFractionDigits: 2 });
+        const maxBuiltUp = (plotArea * maxFAR).toLocaleString(undefined, { maximumFractionDigits: 2 });
+
+        return (
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 className="text-xl font-bold mb-6 flex items-center"><i className="fas fa-calculator text-2xl mr-2 text-indigo-600"></i> FAR & Built-up Area Calculator</h3>
+            <p className="text-gray-500 text-sm mb-6">Estimate the Floor Area Ratio and Total Built-up Area based on Table-1 of the Mangalore Zonal Regulations.</p>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Plot Area (sq.m)</label>
+                    <div className="relative">
+                    <input 
+                        type="number" 
+                        value={plotArea} 
+                        onChange={(e) => setPlotArea(Number(e.target.value))}
+                        className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                    <i className="fas fa-map-marked-alt text-gray-400 absolute left-3 top-4"></i>
+                    </div>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Proposed Road Width (m)</label>
+                    <div className="relative">
+                    <select 
+                        value={roadWidth} 
+                        onChange={(e) => setRoadWidth(Number(e.target.value))}
+                        className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white"
+                    >
+                        <option value={4}>Less than 6m (Restricted FAR)</option>
+                        <option value={6}>6m (Approx 20ft)</option>
+                        <option value={9}>9m (Approx 30ft)</option>
+                        <option value={12}>12m (Approx 40ft)</option>
+                        <option value={18}>18m (Approx 60ft)</option>
+                        <option value={24}>24m+ (Approx 80ft+)</option>
+                    </select>
+                    <i className="fas fa-chart-line text-gray-400 absolute left-3 top-4"></i>
+                    </div>
+                </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-indigo-50 p-5 rounded-xl border border-indigo-100 flex flex-col justify-center">
+                    <span className="block text-sm text-indigo-600 font-semibold mb-1">Base Permissible FAR</span>
+                    <span className="text-3xl font-bold text-gray-900 mb-3">{permissibleFAR.toFixed(2)}</span>
+                    <div className="pt-3 border-t border-indigo-200">
+                    <span className="block text-xs text-indigo-600 font-semibold mb-1">Base Built-up Area</span>
+                    <span className="text-xl font-bold text-gray-800">{baseBuiltUp} sq.m</span>
+                    </div>
+                </div>
+                
+                <div className="bg-blue-50 p-5 rounded-xl border border-blue-100 flex flex-col justify-center">
+                    <span className="block text-sm text-blue-600 font-semibold mb-1">Max Total FAR</span>
+                    <span className="text-3xl font-bold text-gray-900 mb-1">{maxFAR.toFixed(2)}</span>
+                    <span className="text-xs text-blue-600 mb-2">(incl. Premium {premiumFAR.toFixed(1)} + TDR {tdrFAR.toFixed(1)})</span>
+                    <div className="pt-3 border-t border-blue-200">
+                    <span className="block text-xs text-blue-600 font-semibold mb-1">Max Built-up Area</span>
+                    <span className="text-xl font-bold text-gray-800">{maxBuiltUp} sq.m</span>
+                    </div>
+                </div>
+                </div>
+            </div>
+            
+            {/* Land Use Quick Check based on FAR selections */}
+            <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-start space-x-3">
+                <i className="fas fa-check-square text-green-600 mt-0.5 text-xl flex-shrink-0"></i>
+                <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-1">Quick Compatibility Check</h4>
+                <p className="text-xs text-gray-600">
+                    {roadWidth < 6 ? 
+                    <span className="text-red-600 font-semibold">Warning: Plots on roads less than 6m have restricted FAR (capped at 1.0) and severe limitations on Commercial/Industrial uses.</span>
+                    : 
+                    <span>Based on your plot of <strong>{plotArea} sq.m</strong> and road width of <strong>{roadWidth}m</strong>, you fall under the equivalent rules of <span className="font-semibold text-indigo-600"> {plotArea <= 1000 ? "Row 1" : plotArea <= 2000 ? "Row 2" : plotArea <= 3000 ? "Row 3" : plotArea <= 4000 ? "Row 4" : "Rows 5-8"} </span> of Table 1. Ensure your specific use-case is permitted in this tier.</span>
+                    }
+                </p>
+                </div>
+            </div>
+
+            </div>
+        );
+        };
+
+        const LandUseTableSection = () => {
+        return (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8">
+            <div className="p-6 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                <div>
+                <h3 className="text-xl font-bold flex items-center"><i className="fas fa-layer-group text-2xl mr-2 text-indigo-600"></i> Equivalence Table (Table 1)</h3>
+                <p className="text-gray-500 text-sm mt-1">Cross-reference Plot Area and Road Width to find permissible Land Use Zones.</p>
+                </div>
+                <i className="fas fa-search text-gray-400 text-2xl"></i>
+            </div>
+            <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                    <tr className="bg-white text-gray-700 text-xs uppercase tracking-wider">
+                    <th className="p-3 border-b font-semibold">Plot Area (m&sup2;)</th>
+                    <th className="p-3 border-b font-semibold">Min Road</th>
+                    <th className="p-3 border-b font-semibold">Req Road</th>
+                    <th className="p-3 border-b font-semibold">FAR Perm.</th>
+                    <th className="p-3 border-b font-semibold">FAR Max</th>
+                    <th className="p-3 border-b font-semibold">Res Zone</th>
+                    <th className="p-3 border-b font-semibold">Com Zone</th>
+                    <th className="p-3 border-b font-semibold">Ind Zone</th>
+                    <th className="p-3 border-b font-semibold">Inst Zone</th>
+                    </tr>
+                </thead>
+                <tbody className="text-sm">
+                    {equivalenceTableData.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-indigo-50 border-b border-gray-50 transition-colors">
+                        <td className="p-3 font-medium text-gray-900">{row.area}</td>
+                        <td className="p-3 text-gray-600">{row.roadMin}</td>
+                        <td className="p-3 text-indigo-600 font-medium">{row.roadReq}</td>
+                        <td className="p-3 text-gray-900 font-bold">{row.farPerm.toFixed(2)}</td>
+                        <td className="p-3 text-gray-900 font-bold">{row.farTotal.toFixed(2)}</td>
+                        <td className="p-3"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">{row.useRes}</span></td>
+                        <td className="p-3"><span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs font-medium">{row.useCom}</span></td>
+                        <td className="p-3"><span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-md text-xs font-medium">{row.useInd}</span></td>
+                        <td className="p-3"><span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-md text-xs font-medium">{row.usePsp}</span></td>
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+            </div>
+            </div>
+        )
+        }
+
+        const SetbackSection = () => {
+        const [plotArea, setPlotArea] = useState(1000);
+        const [buildingHeight, setBuildingHeight] = useState(10);
+
+        // Determine setbacks based on height and area
+        let matchedSetback = setbackData[0];
+        if (buildingHeight < 7) {
+            matchedSetback = plotArea <= 250 ? setbackData[0] : setbackData[1];
+        } else if (buildingHeight < 10) matchedSetback = setbackData[2];
+        else if (buildingHeight < 12) matchedSetback = setbackData[3];
+        else if (buildingHeight < 15) matchedSetback = setbackData[4];
+        else if (buildingHeight < 18) matchedSetback = setbackData[5];
+        else if (buildingHeight < 21) matchedSetback = setbackData[6];
+        else if (buildingHeight < 24) matchedSetback = setbackData[7];
+        else if (buildingHeight < 27) matchedSetback = setbackData[8];
+        else if (buildingHeight < 30) matchedSetback = setbackData[9];
+        else matchedSetback = setbackData[10];
+
+        return (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div>
+                <h3 className="text-xl font-bold flex items-center"><i className="fas fa-ruler-combined text-2xl mr-2 text-indigo-600"></i> Minimum Setbacks (Table 4)</h3>
+                <p className="text-gray-500 text-sm mt-2">Required open spaces around the building based on building height.</p>
+                </div>
+            </div>
+
+            <div className="p-6 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
+                <h4 className="font-semibold text-gray-800 mb-4 flex items-center"><i className="fas fa-check-circle text-xl mr-2 text-green-600"></i> Interactive Setback Finder</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Plot Area (sq.m)</label>
+                    <input 
+                    type="number" 
+                    value={plotArea} 
+                    onChange={(e) => setPlotArea(Number(e.target.value))}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-shadow"
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Building Height (m)</label>
+                    <input 
+                    type="number" 
+                    value={buildingHeight} 
+                    onChange={(e) => setBuildingHeight(Number(e.target.value))}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-shadow"
+                    />
+                </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-indigo-100 text-center transform transition-transform hover:-translate-y-1">
+                    <span className="block text-xs text-indigo-500 uppercase font-semibold mb-1">Front Setback</span>
+                    <span className="text-3xl font-bold text-gray-900">{matchedSetback.front}<span className="text-lg text-gray-500">m</span></span>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-indigo-100 text-center transform transition-transform hover:-translate-y-1">
+                    <span className="block text-xs text-indigo-500 uppercase font-semibold mb-1">Rear &amp; Sides</span>
+                    <span className="text-3xl font-bold text-gray-900">{matchedSetback.sides}<span className="text-lg text-gray-500">m</span></span>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-indigo-100 text-center transform transition-transform hover:-translate-y-1">
+                    <span className="block text-xs text-indigo-500 uppercase font-semibold mb-1">Max Cov. (Res)</span>
+                    <span className="text-3xl font-bold text-gray-900">{matchedSetback.covRes}<span className="text-lg text-gray-500">%</span></span>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-indigo-100 text-center transform transition-transform hover:-translate-y-1">
+                    <span className="block text-xs text-indigo-500 uppercase font-semibold mb-1">Max Cov. (Non-Res)</span>
+                    <span className="text-3xl font-bold text-gray-900">{matchedSetback.covNonRes}<span className="text-lg text-gray-500">%</span></span>
+                </div>
+                </div>
+            </div>
+
+            <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                <thead>
+                    <tr className="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
+                    <th className="p-4 border-b font-semibold">Building Height (m)</th>
+                    <th className="p-4 border-b font-semibold">Front Setback (m)</th>
+                    <th className="p-4 border-b font-semibold">Rear & Sides (m)</th>
+                    <th className="p-4 border-b font-semibold">Max Cov. (Res.)</th>
+                    <th className="p-4 border-b font-semibold">Max Cov. (Non-Res.)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {setbackData.map((row, idx) => (
+                    <tr key={idx} className={`border-b border-gray-50 text-sm transition-colors ${row.height === matchedSetback.height ? 'bg-indigo-50 border-l-4 border-indigo-500' : 'hover:bg-gray-50 border-l-4 border-transparent'}`}>
+                        <td className="p-4 font-medium text-gray-900">{row.height}</td>
+                        <td className="p-4 text-gray-600 font-semibold">{row.front}</td>
+                        <td className="p-4 text-gray-600 font-semibold">{row.sides}</td>
+                        <td className="p-4 text-gray-600">{row.covRes}%</td>
+                        <td className="p-4 text-gray-600">{row.covNonRes}%</td>
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+            </div>
+            <div className="p-5 bg-yellow-50 text-sm text-yellow-800 border-t border-yellow-100 flex items-start space-x-3">
+                <i className="fas fa-exclamation-circle text-2xl flex-shrink-0 mt-0.5 text-yellow-600"></i>
+                <div>
+                <h4 className="font-semibold mb-1">Important Edge Cases</h4>
+                <p><strong>High Rise Note:</strong> Buildings <strong>15m and above</strong> are considered high-rise. Hospital high-rises are permitted up to 45m. Front setbacks are also dictated by road width (Table 3) - the higher value between height-based and road-width-based setbacks applies.</p>
+                </div>
+            </div>
+            </div>
+        );
+        };
+
+        const StandardsSection = () => {
+        return (
+            <div className="space-y-8">
+            {/* 1. Fire & Structural Safety */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md">
+                <h3 className="text-xl font-bold flex items-center mb-6"><i className="fas fa-fire text-2xl mr-2 text-red-500"></i> Fire Safety & Structural Codes</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-red-50 p-5 rounded-lg border border-red-100">
+                    <h4 className="font-semibold text-red-800 mb-3 flex items-center"><i className="fas fa-shield-alt text-xl mr-2"></i> Fire Safety Rules</h4>
+                    <ul className="list-disc pl-5 text-sm text-red-900 space-y-2">
+                    <li><strong>Low to Mid-Rise (Up to 14.99m):</strong> Standard fire safety measures apply.</li>
+                    <li><strong>High-Rise (15m and above):</strong> Strict NOC required from Fire Services. Must have a minimum 6m vehicular ramp/driveway around the building for fire engines.</li>
+                    <li><strong>Hospitals:</strong> Fire Force Department considers maximum height up to <strong>45m</strong> for issuing NOCs for high-rise hospitals.</li>
+                    <li><strong>Fire Truck Access:</strong> Mandatory minimum 6m wide clear motorable driveway around high-rise buildings. Minimum 4.5m clear headroom for fire engine movement.</li>
+                    <li><strong>Fire Exits & Escape Routes:</strong> Minimum two staircases required for high-rises (&gt;15m) or public buildings with floor areas &gt;500 sq.m. Maximum travel distance to nearest exit is 30m (Residential/Commercial) or 22.5m (Industrial).</li>
+                    </ul>
+                </div>
+                <div className="bg-orange-50 p-5 rounded-lg border border-orange-100">
+                    <h4 className="font-semibold text-orange-800 mb-3 flex items-center"><i className="fas fa-building text-xl mr-2"></i> Structural & Earthquakes</h4>
+                    <ul className="list-disc pl-5 text-sm text-orange-900 space-y-2">
+                    <li><strong>Earthquake Zone:</strong> Mangalore is classified under <strong>Zone III</strong>.</li>
+                    <li><strong>Mandatory Design:</strong> High-rise buildings must be designed and constructed adopting the &quot;criteria for earthquake resistant design of structures&quot; (IS 1893-2002).</li>
+                    <li><strong>Certification:</strong> Engineers/Architects must certify compliance with NBC and IS 1893-2002.</li>
+                    </ul>
+                </div>
+                </div>
+            </div>
+
+            {/* 2. Circulation Layouts */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md">
+                <div className="p-6 border-b border-gray-100">
+                <h3 className="text-xl font-bold flex items-center"><i className="fas fa-chart-line text-2xl mr-2 text-indigo-600"></i> Minimum Widths for Corridors, Stairs & Ramps</h3>
+                <p className="text-gray-500 text-sm mt-2">Regulations for pedestrian movement based on building occupancy type (Table 7).</p>
+                </div>
+                <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                    <tr className="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
+                        <th className="p-4 border-b font-semibold">Building Use or Type</th>
+                        <th className="p-4 border-b font-semibold">Min Corridor (m)</th>
+                        <th className="p-4 border-b font-semibold">Min Staircase (m)</th>
+                        <th className="p-4 border-b font-semibold">Min Ramp (m)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {circulationData.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-indigo-50 border-b border-gray-50 text-sm transition-colors">
+                        <td className="p-4 font-medium text-gray-900">{row.type}</td>
+                        <td className="p-4 text-gray-600 font-semibold">{row.corridor}</td>
+                        <td className="p-4 text-gray-600 font-semibold">{row.stairs}</td>
+                        <td className="p-4 text-gray-600 font-semibold">{row.ramp}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+
+            {/* 3. Eco Codes */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md">
+                <h3 className="text-xl font-bold flex items-center mb-6 text-green-700"><i className="fas fa-tint text-2xl mr-2"></i> Eco Codes & Utilities</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-teal-50 p-5 rounded-lg border border-teal-100">
+                    <h4 className="font-semibold text-teal-800 mb-3 flex items-center"><i className="fas fa-tint text-xl mr-2"></i> Rain Water Harvesting</h4>
+                    <ul className="list-disc pl-5 text-sm text-teal-900 space-y-2">
+                    <li><strong>Mandatory For:</strong> Buildings with plinth area &gt; 100 sq.m built on sites &gt; 200 sq.m.</li>
+                    <li><strong>Methods:</strong> Open wells, ground water recharge pits/trenches, or impervious storage tanks.</li>
+                    <li><strong>Piping:</strong> At least two rain water pipes of 100mm diameter per 100 sq.m of roof area.</li>
+                    </ul>
+                </div>
+                <div className="bg-yellow-50 p-5 rounded-lg border border-yellow-100">
+                    <h4 className="font-semibold text-yellow-800 mb-3 flex items-center"><i className="fas fa-sun text-xl mr-2"></i> Solar Energy Requirements</h4>
+                    <ul className="list-disc pl-5 text-sm text-yellow-900 space-y-2">
+                    <li><strong>Water Heaters (100L/day):</strong> Required for Restaurants (&gt;100 sq.m), Lodges (per 3 rooms), Hostels (per 6 beds), Hospitals (per 4 beds), Single dwellings (&gt;200 sq.m).</li>
+                    <li><strong>Multi-dwellings:</strong> 500 liters/day per 5 units.</li>
+                    <li><strong>Solar Lighting:</strong> Photovoltaic lighting mandatory in multi-unit residential (&gt;5 units) for setbacks, driveways, and corridors.</li>
+                    </ul>
+                </div>
+                </div>
+            </div>
+
+            </div>
+        );
+        };
+
+        const FacilitiesSection = () => {
+        const [useIdx, setUseIdx] = useState(1);
+        const [area, setArea] = useState(1000);
+
+        const selectedOcc = occupancyData[useIdx];
+        const peakOccupancy = Math.ceil(area / selectedOcc.factor);
+        
+        // Approximate Toilet Units based on NBC
+        let totalWC = 0;
+        if (selectedOcc.wcRatio > 0) {
+            if (peakOccupancy <= 100) {
+                totalWC = Math.max(1, Math.ceil(peakOccupancy / selectedOcc.wcRatio));
+            } else {
+                totalWC = Math.max(1, Math.ceil(100 / selectedOcc.wcRatio)) + Math.ceil((peakOccupancy - 100) / (selectedOcc.wcRatio * 2));
+            }
+        }
+
+        return (
+            <div className="space-y-8">
+            {/* Calculator Container */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 className="text-xl font-bold mb-6 flex items-center"><i className="fas fa-users text-2xl mr-2 text-indigo-600"></i> Occupancy & Toilet Requirements Calculator</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                    <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Building Occupancy Type</label>
+                    <div className="relative">
+                        <select 
+                        value={useIdx} 
+                        onChange={(e) => setUseIdx(Number(e.target.value))}
+                        className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white"
+                        >
+                        {occupancyData.map((data, idx) => (
+                            <option key={idx} value={idx}>{data.use}</option>
+                        ))}
+                        </select>
+                        <i className="fas fa-building text-gray-400 absolute left-3 top-4"></i>
+                    </div>
+                    </div>
+                    <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Total Floor Area (sq.m)</label>
+                    <div className="relative">
+                        <input 
+                        type="number" 
+                        value={area} 
+                        onChange={(e) => setArea(Number(e.target.value))}
+                        className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                        <i className="fas fa-map-marked-alt text-gray-400 absolute left-3 top-4"></i>
+                    </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 flex flex-col justify-center items-center text-center shadow-inner">
+                    <span className="block text-sm text-blue-700 font-semibold mb-1 uppercase tracking-wide">Peak Occupancy</span>
+                    <span className="text-5xl font-extrabold text-gray-900 mb-2 drop-shadow-sm">{peakOccupancy}</span>
+                    <span className="text-sm font-medium text-blue-600 bg-blue-100 px-3 py-1 rounded-full mt-1">Persons</span>
+                    <p className="mt-3 text-xs text-blue-800 font-medium">@{selectedOcc.factor} sq.m / person</p>
+                    </div>
+                    <div className="bg-cyan-50 p-6 rounded-xl border border-cyan-100 flex flex-col justify-center items-center text-center shadow-inner">
+                    <span className="block text-sm text-cyan-700 font-semibold mb-1 uppercase tracking-wide">Req. Toilet Units</span>
+                    <span className="text-5xl font-extrabold text-gray-900 mb-2 drop-shadow-sm">{selectedOcc.wcRatio === 0 ? "1/unit" : totalWC}</span>
+                    <span className="text-sm font-medium text-cyan-600 bg-cyan-100 px-3 py-1 rounded-full mt-1">Standard W.C.s</span>
+                    <p className="mt-3 text-xs text-cyan-800 font-medium italic">{selectedOcc.wcRule}</p>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md">
+                <h3 className="text-xl font-bold flex items-center mb-6"><i className="fas fa-wheelchair text-2xl mr-2 text-indigo-600"></i> Lifts, Ramps & Accessible Toilets Rules</h3>
+                <p className="text-gray-600 text-sm mb-6 bg-gray-50 p-3 rounded-md border border-gray-200">Mandatory for Public & Semi-public buildings above <strong>300 sq.m</strong> and Commercial buildings above <strong>5000 sq.m</strong> (Schedule I).</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-indigo-50 p-5 rounded-lg border border-indigo-100">
+                    <h4 className="font-semibold text-indigo-800 mb-3 flex items-center"><i className="fas fa-chart-line text-xl mr-2"></i> Elevators (Lifts)</h4>
+                    <ul className="list-disc pl-5 text-sm text-indigo-900 space-y-2">
+                    <li><strong>Mandatory:</strong> For buildings Ground + 3 floors (or height &gt; 15m).</li>
+                    <li><strong>Accessible Lift:</strong> Min internal size 1.1m x 1.4m. Clear door width 0.9m.</li>
+                    <li><strong>Fire Lift:</strong> High-rise buildings must have at least one 8-passenger capacity 'Fire Lift' equipped with automated doors and connected to a backup power generator.</li>
+                    <li><strong>Controls:</strong> Braille & tactile buttons, positioned 0.9m to 1.2m from floor.</li>
+                    <li><strong>Audio:</strong> Must have auditory announcements for floors.</li>
+                    </ul>
+                </div>
+                <div className="bg-teal-50 p-5 rounded-lg border border-teal-100">
+                    <h4 className="font-semibold text-teal-800 mb-3 flex items-center"><i className="fas fa-ruler-combined text-xl mr-2"></i> Ramps & Slopes</h4>
+                    <ul className="list-disc pl-5 text-sm text-teal-900 space-y-2">
+                    <li><strong>Vehicular Ramps:</strong> Maximum slope of 1:8.</li>
+                    <li><strong>Pedestrian Ramps:</strong> Maximum gradient of 1:10, Minimum width 1.80m.</li>
+                    <li><strong>Landings:</strong> Entrance landing size must be at least 1.80m x 2.00m.</li>
+                    <li><strong>Handrails:</strong> Required at 0.8m height on both sides of ramps.</li>
+                    </ul>
+                </div>
+                <div className="bg-cyan-50 p-5 rounded-lg border border-cyan-100">
+                    <h4 className="font-semibold text-cyan-800 mb-3 flex items-center"><i className="fas fa-tint text-xl mr-2"></i> Accessible Toilets</h4>
+                    <ul className="list-disc pl-5 text-sm text-cyan-900 space-y-2">
+                    <li><strong>Mandatory Provision:</strong> At least <strong>one special W.C.</strong> in every set of toilets.</li>
+                    <li><strong>Dimensions:</strong> Minimum size 1.50m x 1.75m.</li>
+                    <li><strong>Fixtures:</strong> W.C. height 0.50m from floor. Handrails at 0.8m height.</li>
+                    <li><strong>Doors:</strong> Outward opening, min 0.9m width.</li>
+                    </ul>
+                </div>
+                </div>
+            </div>
+            </div>
+        );
+        };
+
+        const BuildingSpecsSection = () => {
+        return (
+            <div className="space-y-8">
+            {/* Room Sizes & Egress */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all hover:shadow-md">
+                <h3 className="text-xl font-bold flex items-center mb-6"><i className="fas fa-expand-arrows-alt text-2xl mr-2 text-indigo-600"></i> Minimum Room Sizes & Architecture Specs</h3>
+                <p className="text-gray-600 text-sm mb-6 bg-gray-50 p-3 rounded-md border border-gray-200">As per general building bye-laws and National Building Code (NBC) referenced in the regulations.</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-blue-50 p-5 rounded-lg border border-blue-100">
+                    <h4 className="font-semibold text-blue-800 mb-3 flex items-center"><i className="fas fa-expand-arrows-alt text-xl mr-2"></i> Standard Room Dimensions</h4>
+                    <ul className="list-disc pl-5 text-sm text-blue-900 space-y-2">
+                    <li><strong>Habitable Room:</strong> Minimum area 9.5 sq.m. Minimum width 2.4m. (For single room dwellings, min area is 12.5 sq.m).</li>
+                    <li><strong>Kitchen:</strong> Minimum area 5.0 sq.m. Minimum width 1.8m.</li>
+                    <li><strong>Bathrooms:</strong> Minimum area 1.8 sq.m for combined Bath/WC (Min width 1.2m). Separate Bath: 1.2 sq.m. Separate WC: 0.9 sq.m.</li>
+                    <li><strong>Ceiling Height:</strong> Minimum 2.75m for habitable rooms. Air-conditioned rooms can be 2.4m.</li>
+                    </ul>
+                </div>
+                <div className="bg-teal-50 p-5 rounded-lg border border-teal-100">
+                    <h4 className="font-semibold text-teal-800 mb-3 flex items-center"><i className="fas fa-wind text-xl mr-2"></i> Natural Light & Ventilation</h4>
+                    <ul className="list-disc pl-5 text-sm text-teal-900 space-y-2">
+                    <li><strong>Habitable Rooms:</strong> Total area of windows/ventilators open to the outside must be at least <strong>1/6th of the floor area</strong>.</li>
+                    <li><strong>Kitchen & Bath:</strong> Must be properly ventilated, opening directly to the exterior or an approved ventilation shaft.</li>
+                    <li><strong>Ventilation Shafts:</strong> For natural ventilation in multi-story buildings, shafts must have a minimum area dependent on building height (e.g., 3.0 sq.m for up to 12m).</li>
+                    </ul>
+                </div>
+                </div>
+
+                <h3 className="text-xl font-bold flex items-center mb-6 mt-8 border-t border-gray-100 pt-8"><i className="fas fa-door-open text-2xl mr-2 text-indigo-600"></i> Means of Egress & Exits</h3>
+                <div className="grid grid-cols-1 gap-6">
+                <div className="bg-indigo-50 p-5 rounded-lg border border-indigo-100">
+                    <h4 className="font-semibold text-indigo-800 mb-3 flex items-center"><i className="fas fa-truck text-xl mr-2"></i> Egress Principles</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <ul className="list-disc pl-5 text-sm text-indigo-900 space-y-2">
+                        <li><strong>Continuous Path:</strong> A continuous and unobstructed way of exit travel from any point in a building to a public way.</li>
+                        <li><strong>Capacity of Exits:</strong> Calculated based on the occupant load factor (e.g., stairs must provide 10mm width per person in residential, 15mm in assembly).</li>
+                        <li><strong>Travel Distance:</strong> The maximum distance to an exit must not exceed <strong>30m</strong> for residential/educational/institutional and <strong>22.5m</strong> for industrial/hazardous zones.</li>
+                    </ul>
+                    <ul className="list-disc pl-5 text-sm text-indigo-900 space-y-2">
+                        <li><strong>Number of Exits:</strong> Minimum two independent exits for buildings with capacity &gt;500 persons per floor, or height &gt;15m.</li>
+                        <li><strong>Door Swings:</strong> Exit doors must open outwards in the direction of escape.</li>
+                        <li><strong>Corridor Widths:</strong> Refer to Circulation table (e.g., Assembly requires 2.0m, Residential 1.5m).</li>
+                    </ul>
+                    </div>
+                </div>
+                </div>
+            </div>
+            </div>
+        );
+        };
+
+        const ParkingSection = () => {
+        const [useIdx, setUseIdx] = useState(0);
+        const [area, setArea] = useState(1000);
+
+        const selectedUse = parkingData[useIdx];
+        const reqParks = Math.max(1, Math.ceil(area / selectedUse.factor));
+
+        return (
+            <div className="space-y-8">
+                {/* Main Calculator */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 className="text-xl font-bold mb-6 flex items-center"><i className="fas fa-calculator text-2xl mr-2 text-indigo-600"></i> Parking Calculator (Table 8)</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Building Occupancy Type</label>
+                        <div className="relative">
+                        <select 
+                            value={useIdx} 
+                            onChange={(e) => setUseIdx(Number(e.target.value))}
+                            className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white"
+                        >
+                            {parkingData.map((data, idx) => (
+                            <option key={idx} value={idx}>{data.use}</option>
+                            ))}
+                        </select>
+                        <i className="fas fa-building text-gray-400 absolute left-3 top-4"></i>
+                        </div>
+                        <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                        <p className="text-xs text-gray-700 italic flex items-start"><i className="fas fa-info-circle mr-1 flex-shrink-0 mt-0.5"></i> <span>Rule: {selectedUse.rule}</span></p>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Total Floor Area (sq.m)</label>
+                        <div className="relative">
+                        <input 
+                            type="number" 
+                            value={area} 
+                            onChange={(e) => setArea(Number(e.target.value))}
+                            className="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                        <i className="fas fa-map-marked-alt text-gray-400 absolute left-3 top-4"></i>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200 flex flex-col justify-center items-center text-center shadow-inner">
+                    <div className="bg-white p-4 rounded-full shadow-sm mb-4">
+                        <i className="fas fa-car text-4xl text-green-600"></i>
+                    </div>
+                    <span className="block text-sm text-green-700 font-semibold mb-1 uppercase tracking-wide">Required Car Parking</span>
+                    <span className="text-6xl font-extrabold text-gray-900 mb-2 drop-shadow-sm">{reqParks}</span>
+                    <span className="text-sm font-medium text-green-600 bg-green-100 px-3 py-1 rounded-full">Spaces Minimum</span>
+                    </div>
+                </div>
+                </div>
+
+                {/* Layout and Dimensions */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-6 border-b border-gray-100">
+                        <h3 className="text-xl font-bold flex items-center"><i className="fas fa-road text-2xl mr-2 text-indigo-600"></i> Parking Layouts & Aisle Widths</h3>
+                        <p className="text-gray-500 text-sm mt-2">Required driveway aisle widths based on the parking angle orientation.</p>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-gray-100 text-gray-700 text-xs uppercase tracking-wider">
+                                <th className="p-4 border-b font-semibold">Parking Type (Angle)</th>
+                                <th className="p-4 border-b font-semibold">Standard Bay Size</th>
+                                <th className="p-4 border-b font-semibold">Aisle Width (1-Way)</th>
+                                <th className="p-4 border-b font-semibold">Aisle Width (2-Way)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {parkingLayoutData.map((row, idx) => (
+                            <tr key={idx} className="hover:bg-indigo-50 border-b border-gray-50 text-sm transition-colors">
+                                <td className="p-4 font-bold text-gray-900">{row.angle}</td>
+                                <td className="p-4 text-gray-600 font-medium">{row.baySize}</td>
+                                <td className="p-4 text-gray-800 font-semibold">{row.aisleOneWay}</td>
+                                <td className="p-4 text-gray-800 font-semibold">{row.aisleTwoWay}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Turning Radius & General Standards */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 className="text-xl font-bold mb-6 flex items-center"><i className="fas fa-sync-alt text-2xl mr-2 text-indigo-600"></i> Minimum Turning Radius</h3>
+                        <div className="space-y-4">
+                            {turningRadiusData.map((item, idx) => (
+                                <div key={idx} className="bg-indigo-50 p-4 rounded-lg border border-indigo-100 flex items-start space-x-4">
+                                    <div className="bg-white p-2 rounded-full shadow-sm text-indigo-500 mt-1">
+                                        <i className={`fas ${item.vehicle.includes('Car') ? 'fa-car-side' : item.vehicle.includes('Fire') ? 'fa-fire-extinguisher' : 'fa-bus'} w-5 h-5 flex items-center justify-center`}></i>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-gray-900">{item.vehicle}</h4>
+                                        <p className="text-2xl font-black text-indigo-600 my-1">{item.radius}</p>
+                                        <p className="text-xs text-gray-600">{item.description}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h4 className="text-xl font-bold mb-6 text-gray-900 flex items-center"><i className="fas fa-list-ul text-2xl mr-2 text-indigo-600"></i> General Standards</h4>
+                        <ul className="list-none space-y-4 text-sm text-gray-700">
+                            <li className="flex items-start bg-gray-50 p-3 rounded-md border border-gray-100">
+                                <i className="fas fa-motorcycle text-indigo-500 mt-1 mr-3 flex-shrink-0 text-lg"></i> 
+                                <div><strong>Two-Wheelers:</strong> Scooter parking space must be at least 2.0 sq.m (2.0m x 1.0m) and should be an additional 25% of the required car parks.</div>
+                            </li>
+                            <li className="flex items-start bg-gray-50 p-3 rounded-md border border-gray-100">
+                                <i className="fas fa-users text-indigo-500 mt-1 mr-3 flex-shrink-0 text-lg"></i> 
+                                <div><strong>Visitor Parking:</strong> In multistoried residential apartments, an additional 10% of the required car parking must be provided exclusively for visitors.</div>
+                            </li>
+                            <li className="flex items-start bg-gray-50 p-3 rounded-md border border-gray-100">
+                                <i className="fas fa-layer-group text-indigo-500 mt-1 mr-3 flex-shrink-0 text-lg"></i> 
+                                <div><strong>Stilt Parking:</strong> Parking provided on a stilt floor (all sides open) is exempted from FAR calculations. Minimum stilt height is generally 2.4m.</div>
+                            </li>
+                            <li className="flex items-start bg-gray-50 p-3 rounded-md border border-gray-100">
+                                <i className="fas fa-ban text-indigo-500 mt-1 mr-3 flex-shrink-0 text-lg"></i> 
+                                <div><strong>Exemptions:</strong> No parking space shall be insisted upon in intensively built-up areas up to 100 sq.m of total floor area.</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        );
+        };
+
+
+        // --- MAIN APP ---
+
+        function App() {
+        const [activeTab, setActiveTab] = useState('zones');
+
+        return (
+            <div className="min-h-screen font-sans text-gray-800">
+            {/* Header */}
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between py-4">
+                    <div className="flex items-center space-x-3">
+                    <div className="bg-gradient-to-br from-indigo-600 to-blue-700 p-2.5 rounded-xl shadow-sm">
+                        <i className="fas fa-map-marked-alt text-2xl text-white"></i>
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Mangalore Zonal Regulations</h1>
+                        <p className="text-xs text-indigo-600 font-bold tracking-wider uppercase">2011 Gazette Notification Explorer</p>
+                    </div>
+                    </div>
+                </div>
+                
+                {/* Navigation Tabs */}
+                <div className="flex space-x-2 overflow-x-auto mt-2 hide-scrollbar pb-1">
+                    <TabButton 
+                    active={activeTab === 'zones'} 
+                    onClick={() => setActiveTab('zones')}
+                    icon={<i className="fas fa-book-open"></i>} 
+                    label="Land Use Zones" 
+                    />
+                    <TabButton 
+                    active={activeTab === 'metrics'} 
+                    onClick={() => setActiveTab('metrics')}
+                    icon={<i className="fas fa-calculator"></i>} 
+                    label="FAR & Metrics" 
+                    />
+                    <TabButton 
+                    active={activeTab === 'setbacks'} 
+                    onClick={() => setActiveTab('setbacks')}
+                    icon={<i className="fas fa-ruler-combined"></i>} 
+                    label="Setbacks & Heights" 
+                    />
+                    <TabButton 
+                    active={activeTab === 'standards'} 
+                    onClick={() => setActiveTab('standards')}
+                    icon={<i className="fas fa-shield-alt"></i>} 
+                    label="Codes & Safety" 
+                    />
+                    <TabButton 
+                    active={activeTab === 'facilities'} 
+                    onClick={() => setActiveTab('facilities')}
+                    icon={<i className="fas fa-users"></i>} 
+                    label="Occupancy & Lifts" 
+                    />
+                    <TabButton 
+                    active={activeTab === 'specs'} 
+                    onClick={() => setActiveTab('specs')}
+                    icon={<i className="fas fa-expand-arrows-alt"></i>} 
+                    label="Room Specs & Egress" 
+                    />
+                    <TabButton 
+                    active={activeTab === 'parking'} 
+                    onClick={() => setActiveTab('parking')}
+                    icon={<i className="fas fa-car"></i>} 
+                    label="Parking Rules" 
+                    />
+                </div>
+                </div>
+            </header>
+
+            {/* Main Content */}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                
+                {/* Intro Alert */}
+                <div className="bg-blue-50 border border-blue-200 text-blue-800 px-5 py-4 rounded-xl mb-8 flex items-start space-x-3 shadow-sm">
+                <i className="fas fa-info-circle text-2xl flex-shrink-0 mt-0.5 text-blue-600"></i>
+                <div className="text-sm leading-relaxed">
+                    <strong className="block mb-1 text-base">Interactive Guide Disclaimer</strong> 
+                    This interactive guide is a simplified representation of the <em>Final Zonal Regulations of Mangalore Local Planning Area (Notified Oct 26, 2011)</em>. It is designed to make the core concepts (Residential, Commercial, Industrial, Institutional, Educational, Assembly) easier to understand. For legal construction purposes, always refer to the official MUDA (Mangalore Urban Development Authority) documentation.
+                </div>
+                </div>
+
+                {/* Tab Content: Zones */}
+                {activeTab === 'zones' && (
+                <div className="space-y-6 animate-fadeIn">
+                    <div className="mb-8 border-b border-gray-200 pb-4">
+                    <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Permissible Land Use Categories</h2>
+                    <p className="text-gray-600 text-lg">Explore what types of buildings and activities are allowed in different city zones.</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {categoriesData.map(data => (
+                        <CategoryCard key={data.id} data={data} />
+                    ))}
+                    </div>
+                </div>
+                )}
+
+                {/* Tab Content: Metrics / FAR */}
+                {activeTab === 'metrics' && (
+                <div className="space-y-6 animate-fadeIn">
+                    <div className="mb-8 border-b border-gray-200 pb-4">
+                    <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Floor Area Ratio (FAR)</h2>
+                    <p className="text-gray-600 text-lg">FAR dictates how much total floor area you can build relative to your plot size. It is heavily dependent on the width of the road facing your property.</p>
+                    </div>
+                    
+                    <CalculatorSection />
+                    <LandUseTableSection />
+                    
+                    <div className="mt-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h4 className="font-bold mb-4 text-lg">Important Rules regarding FAR:</h4>
+                    <ul className="list-disc pl-5 space-y-3 text-sm text-gray-700">
+                        <li><strong>Road Widths:</strong> The FAR is determined by a combination of existing and proposed road widths. If the existing road width falls between two categories, the lower one is considered.</li>
+                        <li><strong>Premium FAR:</strong> You can purchase Premium FAR. The value is calculated on permissible floor area at 50% of the land cost (Guidance Value).</li>
+                        <li><strong>Exemptions:</strong> Areas excluded from FAR computation include Staircases, Lifts, Parking areas, Swiming pools (open to sky), Overhead tanks, and Watchman cubicles (&lt;3sqm).</li>
+                        <li><strong>Amalgamation:</strong> Clubbing 2 or more properties together yields an additional permissible FAR bonus ranging from +0.3 to +0.5 depending on total area and road width.</li>
+                    </ul>
+                    </div>
+                </div>
+                )}
+
+                {/* Tab Content: Setbacks */}
+                {activeTab === 'setbacks' && (
+                <div className="space-y-6 animate-fadeIn">
+                    <div className="mb-8 border-b border-gray-200 pb-4">
+                    <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Building Setbacks & Coverage</h2>
+                    <p className="text-gray-600 text-lg">Setbacks protect residential/commercial areas by ensuring adequate light, air, and protection from fire. They increase as the height of the building increases.</p>
+                    </div>
+                    
+                    <SetbackSection />
+                </div>
+                )}
+
+                {/* Tab Content: Standards (Replaced Circulation) */}
+                {activeTab === 'standards' && (
+                <div className="space-y-6 animate-fadeIn">
+                    <div className="mb-8 border-b border-gray-200 pb-4">
+                    <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Building Codes, Safety & Standards</h2>
+                    <p className="text-gray-600 text-lg">Comprehensive regulations covering Fire Safety, Eco Guidelines, and Circulation widths.</p>
+                    </div>
+                    
+                    <StandardsSection />
+                </div>
+                )}
+
+                {/* Tab Content: Facilities & Occupancy */}
+                {activeTab === 'facilities' && (
+                <div className="space-y-6 animate-fadeIn">
+                    <div className="mb-8 border-b border-gray-200 pb-4">
+                    <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Occupancy, Lifts & Accessibility</h2>
+                    <p className="text-gray-600 text-lg">Calculate Peak Occupancy, required toilet units, and view regulations for Elevators and Ramps.</p>
+                    </div>
+                    
+                    <FacilitiesSection />
+                </div>
+                )}
+
+                {/* Tab Content: Building Specs */}
+                {activeTab === 'specs' && (
+                <div className="space-y-6 animate-fadeIn">
+                    <div className="mb-8 border-b border-gray-200 pb-4">
+                    <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Room Dimensions & Egress</h2>
+                    <p className="text-gray-600 text-lg">Minimum room sizes, natural light requirements, ventilation standards, and means of escape.</p>
+                    </div>
+                    
+                    <BuildingSpecsSection />
+                </div>
+                )}
+
+                {/* Tab Content: Parking */}
+                {activeTab === 'parking' && (
+                <div className="space-y-6 animate-fadeIn">
+                    <div className="mb-8 border-b border-gray-200 pb-4">
+                    <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Off-Street Parking Requirements</h2>
+                    <p className="text-gray-600 text-lg">Calculate the minimum number of parking bays required based on the occupancy type and floor area.</p>
+                    </div>
+                    
+                    <ParkingSection />
+                    
+                </div>
+                )}
+
+            </main>
+            
+            {/* Footer */}
+            <footer className="bg-white border-t border-gray-200 mt-12 py-6 shadow-inner">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <p className="text-sm text-gray-500">
+                        Created and designed by <span className="font-bold text-indigo-600">Ar. Jacob Thomas</span>
+                    </p>
+                </div>
+            </footer>
+            </div>
+        );
+        }
+
+        // --- RENDER APP TO DOM ---
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+    </script>
+</body>
+</html>
